@@ -26,14 +26,21 @@ namespace SqlDataReaderStream.Serializer
         {
         }
 
-        public void WriteObject(Stream p_Stream, object p_Value, bool p_LastValueOfRow)
+        public void WriteObject(Stream p_Stream, object p_Value, Type p_TableColumnDataType, bool p_LastValueOfRow)
         {
             //DataContractSerializer dcs = new DataContractSerializer(p_Value.GetType());
             //dcs.WriteObject(p_Stream, p_Value);
             _StreamXml.Position = 0;
-            WriteOneObjectByXmlDictionaryWriter(_XmlDictionaryWriter, p_Value);
+            WriteOneObjectByXmlDictionaryWriter(_XmlDictionaryWriter, p_Value, p_TableColumnDataType);
             CopyValueFromStreamXmlToStream(_StreamXml, p_Stream, ref _Buffer);
             WriteSplitter(p_Stream, p_LastValueOfRow);
+        }
+
+        protected override object ConvertColumnData(Type p_ColumnType, string p_ColumnData)
+        {
+            if (p_ColumnType == typeof(decimal))
+                p_ColumnData = p_ColumnData.Replace(".", ",");
+            return base.ConvertColumnData(p_ColumnType, p_ColumnData);
         }
 
         private void WriteSplitter(Stream p_Stream, bool p_LastValueOfRow)
@@ -57,11 +64,17 @@ namespace SqlDataReaderStream.Serializer
             }
         }
 
-        private static void WriteOneObjectByXmlDictionaryWriter(XmlDictionaryWriter p_XmlDictionaryWriter, object p_Value)
+        public readonly string ColumnSplitterString = ColumnSplitter.ToString();
+        public readonly string RowSplitterString = RowSplitter.ToString();
+        private void WriteOneObjectByXmlDictionaryWriter(XmlDictionaryWriter p_XmlDictionaryWriter, object p_Value, Type p_TableColumnDataType)
         {
             p_XmlDictionaryWriter.WriteStartElement("a");
             if (p_Value == DBNull.Value)
                 p_Value = string.Empty;
+            if (p_TableColumnDataType == typeof(string))
+            {
+                BeforeWriteStreamCheckAndReplaceSpecialChars(ref p_Value);
+            }
             p_XmlDictionaryWriter.WriteValue(p_Value);
             p_XmlDictionaryWriter.WriteEndElement();
             p_XmlDictionaryWriter.Flush();

@@ -40,7 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\ISqlValueSerializerReadValues.cs" />
     <Compile Include="Serializer\ISqlValueSerializer.cs" />
     <Compile Include="SqlStreamEngine.cs" />
     <Compile Include="SqlStream.cs" />

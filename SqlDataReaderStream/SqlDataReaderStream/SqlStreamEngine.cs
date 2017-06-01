@@ -63,8 +63,8 @@ namespace SqlDataReaderStream
                 var count = _DataReader.FieldCount;
                 for (var i = 0; i < count; i++)
                 {
-                    var val = _DataReader.GetValue(i);
-                    _SqlValueSerializer.WriteObject(Stream, val, i == count - 1);
+                    var val = _DataReader.GetValue(i);                    
+                    _SqlValueSerializer.WriteObject(Stream, val, DataTableWithoutData.Columns[i].DataType, i == count - 1);
                 }
             }
             var result = Stream.Position;

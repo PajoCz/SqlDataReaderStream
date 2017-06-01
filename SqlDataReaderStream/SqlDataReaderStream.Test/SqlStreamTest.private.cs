@@ -23,7 +23,9 @@ namespace SqlDataReaderStream.Test
 
         private static string FileName(string p_FileNameWithoutDirectory)
         {
-            return Path.Combine(ConfigurationManager.AppSettings["DataDir"], p_FileNameWithoutDirectory);
+            var dir = ConfigurationManager.AppSettings["DataDir"];
+            Directory.CreateDirectory(dir);
+            return Path.Combine(dir, p_FileNameWithoutDirectory);
         }
     }
 }

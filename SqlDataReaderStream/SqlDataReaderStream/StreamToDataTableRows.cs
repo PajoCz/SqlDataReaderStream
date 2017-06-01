@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Text;
 using SqlDataReaderStream.Serializer;
 
@@ -20,31 +19,16 @@ namespace SqlDataReaderStream
             byte[] buffer = new byte[p_BufferSize];
             var readed = int.MaxValue;
             LastRowMayBeOnlyFirstFragment = string.Empty;
+            List<Type> columnTypes = new List<Type>(p_DataTable.Columns.Count);
+            foreach (DataColumn column in p_DataTable.Columns)
+                columnTypes.Add(column.DataType);
             while (readed > 0)
             {
                 readed = p_Stream.Read(buffer, 0, buffer.Length);
                 var readedString = LastRowMayBeOnlyFirstFragment + Encoding.UTF8.GetString(buffer, 0, readed);
-                IEnumerable<IEnumerable<string>> readedSplitted = p_Serializer.ReadValues(readedString, out LastRowMayBeOnlyFirstFragment);
-                CopyDataToDataTable(readedSplitted, p_DataTable);
-            }
-        }
-
-        private static void CopyDataToDataTable(IEnumerable<IEnumerable<string>> p_ReadedSplitted, DataTable p_DataTable)
-        {
-            foreach (IEnumerable<string> row in p_ReadedSplitted)
-            {
-                IEnumerable<string> columnStrings = row as IList<string> ?? row.ToList();
-                if (columnStrings.Count() != p_DataTable.Columns.Count)
-                    throw new Exception($"Row contains {columnStrings.Count()} columns in stream data but DataTable schema contains {p_DataTable.Columns.Count} columns");
-                object[] rowData = new object[columnStrings.Count()];
-                var iColumn = 0;
-                foreach (var columnString in columnStrings)
-                {
-                    var dataTableColumn = p_DataTable.Columns[iColumn];
-                    rowData[iColumn] = string.IsNullOrEmpty(columnString) ? null : Convert.ChangeType(columnString, dataTableColumn.DataType);
-                    iColumn++;
-                }
-                p_DataTable.Rows.Add(rowData);
+                IEnumerable<object[]> readedSplitted = p_Serializer.ReadValues(readedString, columnTypes, out LastRowMayBeOnlyFirstFragment);
+                foreach (object[] rowData in readedSplitted)
+                    p_DataTable.Rows.Add(rowData);
             }
         }
     }
