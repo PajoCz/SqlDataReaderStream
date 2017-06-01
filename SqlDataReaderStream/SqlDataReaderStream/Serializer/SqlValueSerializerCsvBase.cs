@@ -36,7 +36,7 @@ namespace SqlDataReaderStream.Serializer
                 string[] columns = rows[iRow].Split(ColumnSplitter);
                 List<string> rowData = new List<string>(columns.Length);
                 for (var iColumn = 0; iColumn < columns.Length; iColumn++)
-                    rowData[iColumn] = columns[iColumn];
+                    rowData.Add(columns[iColumn]);
                 rowsValues.Add(rowData);
             }
             p_LastRowMayBeOnlyFirstFragment = rows[rows.Length - 1];

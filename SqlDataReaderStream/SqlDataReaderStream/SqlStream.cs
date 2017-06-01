@@ -19,7 +19,7 @@ namespace SqlDataReaderStream
         public SqlStream(SqlCommand p_SqlCommand, ISqlValueSerializer p_SqlValueSerializer)
         {
             _DataReader = p_SqlCommand.ExecuteReader(CommandBehavior.CloseConnection);
-            _StreamEngine = new SqlStreamEngine(_DataReader, new MemoryStream(), p_SqlValueSerializer, false);
+            _StreamEngine = new SqlStreamEngine(_DataReader, new MemoryStream(), p_SqlValueSerializer/*, false*/);
         }
 
         public DataTable DataTableWithoutData => _StreamEngine.DataTableWithoutData;

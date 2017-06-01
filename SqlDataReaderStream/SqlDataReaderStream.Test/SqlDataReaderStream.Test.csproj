@@ -46,6 +46,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlStreamTest.private.cs" />
     <Compile Include="SqlStreamTest.cs" />
+    <Compile Include="StreamToDataTableRowsTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

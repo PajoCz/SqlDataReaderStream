@@ -14,7 +14,7 @@ namespace SqlDataReaderStream
         public readonly Stream Stream;
         private int _MovedData;
 
-        public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer, bool p_IncludeHeader)
+        public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer/*, bool p_IncludeHeader*/)
         {
             _DataReader = p_DataReader;
             Stream = p_Stream;
@@ -25,12 +25,12 @@ namespace SqlDataReaderStream
             foreach (DataRow row in table.Rows)
                 DataTableWithoutData.Columns.Add(new DataColumn(row["ColumnName"].ToString(), Type.GetType(row["DataType"].ToString())));
 
-            if (p_IncludeHeader)
-            {
-                for (var i = 0; i < table.Rows.Count; i++)
-                    p_SqlValueSerializer.WriteObject(Stream, table.Rows[i][0], i == table.Rows.Count - 1);
-                _MovedData = (int) Stream.Position;
-            }
+            //if (p_IncludeHeader)
+            //{
+            //    for (var i = 0; i < table.Rows.Count; i++)
+            //        p_SqlValueSerializer.WriteObject(Stream, table.Rows[i][0], i == table.Rows.Count - 1);
+            //    _MovedData = (int) Stream.Position;
+            //}
         }
 
         public int Read(byte[] buffer, int offset, int count)

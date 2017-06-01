@@ -41,9 +41,10 @@ namespace SqlDataReaderStream
                 foreach (var columnString in columnStrings)
                 {
                     var dataTableColumn = p_DataTable.Columns[iColumn];
-                    rowData[iColumn] = Convert.ChangeType(columnString, dataTableColumn.DataType);
+                    rowData[iColumn] = string.IsNullOrEmpty(columnString) ? null : Convert.ChangeType(columnString, dataTableColumn.DataType);
                     iColumn++;
                 }
+                p_DataTable.Rows.Add(rowData);
             }
         }
     }
