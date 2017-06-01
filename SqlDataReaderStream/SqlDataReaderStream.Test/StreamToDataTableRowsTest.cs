@@ -1,6 +1,5 @@
 ﻿using System.Configuration;
 using System.Data.SqlClient;
-using System.Transactions;
 using NUnit.Framework;
 using SqlDataReaderStream.Serializer;
 
