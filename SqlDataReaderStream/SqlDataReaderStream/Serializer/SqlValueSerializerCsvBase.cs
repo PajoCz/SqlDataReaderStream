@@ -42,6 +42,7 @@ namespace SqlDataReaderStream.Serializer
             string[] rows = p_ReadedBufferString.Split(RowSplitter);
             for (var iRow = 0; iRow < rows.Length - 1; iRow++)
             {
+                if (string.IsNullOrEmpty(rows[iRow])) continue;
                 List<string> rowDataStrings = rows[iRow].Split(ColumnSplitter).ToList();
                 if (rowDataStrings.Count != p_ColumnTypes.Count)
                     throw new Exception($"Row contains {rowDataStrings.Count} columns in stream data but DataTable schema contains {p_ColumnTypes.Count} columns");
