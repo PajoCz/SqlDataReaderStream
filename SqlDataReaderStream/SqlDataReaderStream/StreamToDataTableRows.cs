@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Text;
@@ -14,14 +14,14 @@ namespace SqlDataReaderStream
     {
         private string LastRowMayBeOnlyFirstFragment;
 
-        public void ReadStreamToDataTable(Stream p_Stream, DataTable p_DataTable, ISqlValueSerializer p_Serializer, int p_BufferSize = 8 * 1024)
+        public void ReadStreamToDataTable(Stream p_Stream, DataTable p_DataTable, ISqlValueSerializer p_Serializer, int p_BufferSize = 8 * 1024 * 10)
         {
             byte[] buffer = new byte[p_BufferSize];
             var readed = int.MaxValue;
             LastRowMayBeOnlyFirstFragment = string.Empty;
-            List<Type> columnTypes = new List<Type>(p_DataTable.Columns.Count);
+            List<TypeWithConverter> columnTypes = new List<TypeWithConverter>(p_DataTable.Columns.Count);
             foreach (DataColumn column in p_DataTable.Columns)
-                columnTypes.Add(column.DataType);
+                columnTypes.Add(new TypeWithConverter(column.DataType, TypeDescriptor.GetConverter(column.DataType)));
             while (readed > 0)
             {
                 readed = p_Stream.Read(buffer, 0, buffer.Length);

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -9,15 +7,16 @@ namespace SqlDataReaderStream.Serializer
 {
     public class SqlValueSerializerCsvBase
     {
-        private List<Tuple<char, string>> ReplaceSpecialChars = new List<Tuple<char, string>>()
-        {
-            new Tuple<char, string>('\t', "\\t"),
-            new Tuple<char, string>('\n', "\\n"),
-            new Tuple<char, string>('\r', "\\r"),
-        };
         public const char ColumnSplitter = '\t';
         public const char RowSplitter = '\n';
         protected readonly Encoding Encoding;
+
+        private readonly List<Tuple<char, string>> ReplaceSpecialChars = new List<Tuple<char, string>>
+        {
+            new Tuple<char, string>('\t', "\\t"),
+            new Tuple<char, string>('\n', "\\n"),
+            new Tuple<char, string>('\r', "\\r")
+        };
 
         public SqlValueSerializerCsvBase(Encoding p_Encoding)
         {
@@ -36,7 +35,7 @@ namespace SqlDataReaderStream.Serializer
         /// <param name="p_ColumnTypes"></param>
         /// <param name="p_LastRowMayBeOnlyFirstFragment"></param>
         /// <returns></returns>
-        public IEnumerable<object[]> ReadValues(string p_ReadedBufferString, List<Type> p_ColumnTypes, out string p_LastRowMayBeOnlyFirstFragment)
+        public IEnumerable<object[]> ReadValues(string p_ReadedBufferString, List<TypeWithConverter> p_ColumnTypes, out string p_LastRowMayBeOnlyFirstFragment)
         {
             List<object[]> rowsValues = new List<object[]>();
             string[] rows = p_ReadedBufferString.Split(RowSplitter);
@@ -59,32 +58,27 @@ namespace SqlDataReaderStream.Serializer
             return rowsValues;
         }
 
-        protected virtual object ConvertColumnData(Type p_ColumnType, string p_ColumnData)
+        protected virtual object ConvertColumnData(TypeWithConverter p_ColumnType, string p_ColumnData)
         {
-            if (p_ColumnType == typeof(string))
+            if (p_ColumnType.Type == typeof(string))
             {
                 ReplaceSpecialChars.ForEach(m =>
                 {
                     if (p_ColumnData.Contains(m.Item2))
-                    {
                         p_ColumnData = p_ColumnData.Replace(m.Item2, m.Item1.ToString());
-                    }
                 });
+                return p_ColumnData;
             }
-            return string.IsNullOrEmpty(p_ColumnData) ? null : TypeDescriptor.GetConverter(p_ColumnType).ConvertFromString(p_ColumnData);
+            return string.IsNullOrEmpty(p_ColumnData) ? null : p_ColumnType.TypeConverter.ConvertFromString(p_ColumnData);
             //Convert.ChangeType not suppor GUID
-            return string.IsNullOrEmpty(p_ColumnData) ? null : Convert.ChangeType(p_ColumnData, p_ColumnType);
+            //return string.IsNullOrEmpty(p_ColumnData) ? null : Convert.ChangeType(p_ColumnData, p_ColumnType);
         }
 
         protected void BeforeWriteStreamCheckAndReplaceSpecialChars(ref object p_Value)
         {
-            foreach (var m in ReplaceSpecialChars)
-            {
+            foreach (Tuple<char, string> m in ReplaceSpecialChars)
                 if (p_Value.ToString().Contains(m.Item1))
-                {
                     p_Value = p_Value.ToString().Replace(m.Item1.ToString(), m.Item2);
-                }
-            }
         }
     }
 }
