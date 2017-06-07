@@ -44,6 +44,12 @@ is ok", table.Rows[2]["TestString"], "Failed test string with special chars (sam
         }
 
         [Test]
+        public void ReadStreamToDataTable_SqlValueSerializerCsvSimple_BufferSizeSameAsOneRowSerialized()
+        {
+            TestSqlValueSerializerForReadingAndWriting(new SqlValueSerializerCsvSimple(), 7);
+        }
+
+        [Test]
         public void ReadStreamToDataTable_SqlValueSerializerCsvWithXmlDictionaryWriter()
         {
             TestSqlValueSerializerForReadingAndWriting(new SqlValueSerializerCsvWithXmlDictionaryWriter());

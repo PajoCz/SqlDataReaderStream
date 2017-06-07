@@ -44,12 +44,17 @@ namespace SqlDataReaderStream
                 Stream.Position = 0;
                 Stream.Read(buffer, offset, (int) readBytesFromStream);
 #if log
-                LogBytes($"Stream readed {readBytesFromStream}B from buffer : ", buffer, (int)readBytesFromStream);
+                LogBytes($"Stream readed {readBytesFromStream}B from buffer:", buffer, (int)readBytesFromStream);
 #endif
                 //Move unprocessed data for next Read operation and Stream.Position is prepared for next WriteDataToStreamFromDataReader
-                _StreamLengthWithValidData = readBytesFromStream < _StreamLengthWithValidData
-                    ? MoveUnreadedDataToBeginOfStream() 
-                    : 0;
+                if (readBytesFromStream < _StreamLengthWithValidData)
+                {
+                    _StreamLengthWithValidData = MoveUnreadedDataToBeginOfStream();
+                }
+                else
+                {
+                    Stream.Position = _StreamLengthWithValidData = 0;
+                }
             }
             return (int)readBytesFromStream;
         }
@@ -61,7 +66,7 @@ namespace SqlDataReaderStream
             Stream.Position = 0;
             Stream.Write(buffer, 0, buffer.Length);
 #if log
-            LogStreamFromBeginToActualPosition("Moved unreaded data to begin of stream : ", Stream);
+            LogStreamFromBeginToActualPosition("Moved unreaded data to begin of stream:", Stream);
 #endif
             return buffer.Length;
         }
@@ -87,7 +92,7 @@ namespace SqlDataReaderStream
                         _SqlValueSerializer.WriteObject(Stream, val, DataTableWithoutData.Columns[i].DataType, i == count - 1);
                     }
 #if log
-                    LogStreamFromBeginToActualPosition("DataReader.Read written DataRows to Stream. Stream = ", Stream);
+                    LogStreamFromBeginToActualPosition("DataReader.Read written another DataRow to Stream. Stream data:", Stream);
 #endif
                     if (Stream.Position >= p_WriteMinBytes) break;
                 }
@@ -108,13 +113,13 @@ namespace SqlDataReaderStream
             var text = Encoding.UTF8.GetString(buffer);
             p_Stream.Position = pos;
 
-            Debug.WriteLine(p_Prefix + text);
+            Debug.WriteLine(p_Prefix + Environment.NewLine + text);
         }
 
         private void LogBytes(string p_Prefix, byte[] buffer, int count)
         {
             var text = Encoding.UTF8.GetString(buffer, 0, count);
-            Debug.WriteLine(p_Prefix + text);
+            Debug.WriteLine(p_Prefix + Environment.NewLine + text);
         }
 #endif
     }
