@@ -12,9 +12,15 @@ namespace SqlDataReaderStream
     /// </summary>
     public class StreamToDataTableRows
     {
+        //_DefaultCopyBufferSize - from MS implementation of Stream.CopyTo
+        //We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
+        // The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
+        // improvement in Copy performance.
+        private const int _DefaultCopyBufferSize = 81920;   //81920 = 80 * 1024 = 80kB
+
         private string LastRowMayBeOnlyFirstFragment;
 
-        public void ReadStreamToDataTable(Stream p_Stream, DataTable p_DataTable, ISqlValueSerializer p_Serializer, int p_BufferSize = 8 * 1024 * 10)
+        public void ReadStreamToDataTable(Stream p_Stream, DataTable p_DataTable, ISqlValueSerializer p_Serializer, int p_BufferSize = _DefaultCopyBufferSize)
         {
             byte[] buffer = new byte[p_BufferSize];
             var readed = int.MaxValue;
