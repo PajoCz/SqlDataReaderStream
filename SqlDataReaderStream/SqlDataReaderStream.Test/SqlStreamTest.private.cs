@@ -1,5 +1,6 @@
 ﻿using System.Configuration;
 using System.IO;
+using System.IO.Compression;
 
 namespace SqlDataReaderStream.Test
 {
@@ -13,11 +14,19 @@ namespace SqlDataReaderStream.Test
             }
 
             ////gzip
-            //p_Stream.Position = 0;
+            //using( FileStream fsRead = new FileStream(p_FileName, FileMode.Open))
             //using (FileStream fs = new FileStream(Path.ChangeExtension(p_FileName, ".gzip"), FileMode.Create))
             //using (GZipStream zipStream = new GZipStream(fs, CompressionMode.Compress))
             //{
-            //    p_Stream.CopyTo(zipStream);
+            //    fsRead.CopyTo(zipStream);
+            //}
+
+            //using (FileStream fsRead = new FileStream(p_FileName, FileMode.Open))
+            //using (FileStream fs = new FileStream(Path.ChangeExtension(p_FileName, "-buffer.gzip"), FileMode.Create))
+            //using (GZipStream zipStream = new GZipStream(fs, CompressionMode.Compress))
+            //using (BufferedStream bufferedStream = new BufferedStream(zipStream, 8 * 1024))
+            //{
+            //    fsRead.CopyTo(bufferedStream);
             //}
         }
 

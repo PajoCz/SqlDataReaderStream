@@ -30,7 +30,7 @@ namespace SqlDataReaderStream.Test
         }
 
         [Test]
-        public void AuditEventTable_SqlValueSerializerCsvSimple()
+        public void SqlValueSerializerCsvSimple()
         {
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
             {
@@ -46,7 +46,7 @@ namespace SqlDataReaderStream.Test
         }
 
         [Test]
-        public void AuditEventTable_SqlValueSerializerCsvWithXmlDictionaryWriter()
+        public void SqlValueSerializerCsvWithXmlDictionaryWriter()
         {
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
             {
@@ -58,6 +58,57 @@ namespace SqlDataReaderStream.Test
                 {
                     SaveToFile(FileName("TestTable-XmlDictionaryWriter.csv"), sqlDataReaderStream);
                 }
+            }
+        }
+
+        [Test]
+        public void TwoColumnsSameName_CtorThrowsDuplicateNameException_SqlCommandWithTransaction_ConnectionMustBeClosed()
+        {
+            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            {
+                conn.Open();
+                using (var tran = conn.BeginTransaction(IsolationLevel.ReadUncommitted))
+                {
+                    var sql = "SELECT *, 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
+                    var cmd = new SqlCommand(sql, conn, tran);
+
+                    try
+                    {
+                        using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple()))
+                        {
+                        }
+                    }
+                    catch (DuplicateNameException dne)
+                    {
+                        Assert.AreEqual(ConnectionState.Closed, conn.State);
+                        return;
+                    }
+                    Assert.Fail("DuplicateNameException expected");
+                }
+            }
+        }
+
+        [Test]
+        public void TwoColumnsSameName_CtorThrowsDuplicateNameException_SqlCommandWithoutTransaction_ConnectionMustBeClosed()
+        {
+            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            {
+                conn.Open();
+                var sql = "SELECT *, 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
+                var cmd = new SqlCommand(sql, conn);
+
+                try
+                {
+                    using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple()))
+                    {
+                    }
+                }
+                catch (DuplicateNameException dne)
+                {
+                    Assert.AreEqual(ConnectionState.Closed, conn.State);
+                    return;
+                }
+                Assert.Fail("DuplicateNameException expected");
             }
         }
     }
