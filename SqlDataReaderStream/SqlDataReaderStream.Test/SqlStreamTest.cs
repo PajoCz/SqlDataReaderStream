@@ -89,6 +89,23 @@ namespace SqlDataReaderStream.Test
         }
 
         [Test]
+        public void TwoColumnsSameName_CtorWithDuplicateNameExceptionPrevent_ReturnsOnlyFirstColumn()
+        {
+            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            {
+                conn.Open();
+                var sql = "SELECT 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
+                var cmd = new SqlCommand(sql, conn);
+
+                using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), true))
+                {
+                    Assert.AreEqual(1, sqlDataReaderStream.DataTableWithoutData.Columns.Count);
+                    Assert.AreEqual("ColumnA", sqlDataReaderStream.DataTableWithoutData.Columns[0].ColumnName);
+                }
+            }
+        }
+
+        [Test]
         public void TwoColumnsSameName_CtorThrowsDuplicateNameException_SqlCommandWithoutTransaction_ConnectionMustBeClosed()
         {
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))

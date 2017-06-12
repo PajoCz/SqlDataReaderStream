@@ -23,7 +23,7 @@ namespace SqlDataReaderStream
         private long _StreamLengthWithValidData;
         private bool _DataReaderEof;
 
-        public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer)
+        public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer, bool p_DuplicateNameExceptionPrevent)
         {
             _DataReader = p_DataReader;
             Stream = p_Stream;
@@ -32,7 +32,12 @@ namespace SqlDataReaderStream
             var table = _DataReader.GetSchemaTable();
             DataTableWithoutData = new DataTable();
             foreach (DataRow row in table.Rows)
-                DataTableWithoutData.Columns.Add(new DataColumn(row["ColumnName"].ToString(), Type.GetType(row["DataType"].ToString())));
+            {
+                string columnName = row["ColumnName"].ToString();
+                if (p_DuplicateNameExceptionPrevent && DataTableWithoutData.Columns.Contains(columnName))
+                    continue;
+                DataTableWithoutData.Columns.Add(new DataColumn(columnName, Type.GetType(row["DataType"].ToString())));
+            }
         }
 
         public int Read(byte[] buffer, int offset, int count)
