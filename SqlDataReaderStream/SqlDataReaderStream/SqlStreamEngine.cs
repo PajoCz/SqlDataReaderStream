@@ -3,14 +3,14 @@
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using SqlDataReaderStream.Serializer;
 #if log
 using System.Diagnostics;
 #endif
-using System.IO;
 #if log
 using System.Text;
 #endif
-using SqlDataReaderStream.Serializer;
 
 namespace SqlDataReaderStream
 {
@@ -20,44 +20,46 @@ namespace SqlDataReaderStream
 
         private readonly SqlDataReader _DataReader;
         private readonly ISqlValueSerializer _SqlValueSerializer;
-        private readonly bool _TransferDuplicateColumnValues;
-        private bool _DuplicateNameExceptionPreventUsed;
+        private readonly DuplicateColumnNameProcess _DuplicateColumnNameProcess;
+        private readonly bool _DuplicateNameExceptionPreventUsed;
         public readonly DataTable DataTableWithoutData;
         public readonly Stream Stream;
         private long _StreamLengthWithValidData;
         private bool _DataReaderEof;
 
-        public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer, bool p_DuplicateNameExceptionPrevent, bool p_TransferDuplicateColumnValues)
+        public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer,
+            DuplicateColumnNameProcess p_DuplicateColumnNameProcess)
         {
             _DataReader = p_DataReader;
             Stream = p_Stream;
             _SqlValueSerializer = p_SqlValueSerializer;
-            _TransferDuplicateColumnValues = p_TransferDuplicateColumnValues;
+            _DuplicateColumnNameProcess = p_DuplicateColumnNameProcess;
 
             var table = _DataReader.GetSchemaTable();
             DataTableWithoutData = new DataTable();
             foreach (DataRow row in table.Rows)
             {
-                DataTableWithoutData.Columns.Add(CreateColumn(row["ColumnName"].ToString(), Type.GetType(row["DataType"].ToString()), p_DuplicateNameExceptionPrevent));
-            }
-        }
+                var columnName = row["ColumnName"].ToString();
+                var dataType = Type.GetType(row["DataType"].ToString());
 
-        private DataColumn CreateColumn(string p_ColumnName, Type p_DataType, bool p_DuplicateNameExceptionPrevent)
-        {
-            if (p_DuplicateNameExceptionPrevent && DataTableWithoutData.Columns.Contains(p_ColumnName))
-            {
-                var uniqueColumnName = UniqueColumnName(p_ColumnName, DataTableWithoutData.Columns);
-                DataColumn column = new DataColumn(uniqueColumnName, p_DataType);
-                column.ExtendedProperties[OriginalColumnName] = p_ColumnName;
-                _DuplicateNameExceptionPreventUsed = true;
-                return column;
+                if ((_DuplicateColumnNameProcess == DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithData
+                     || _DuplicateColumnNameProcess == DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithoutData)
+                    && DataTableWithoutData.Columns.Contains(columnName))
+                {
+                    var uniqueColumnName = UniqueColumnName(columnName, DataTableWithoutData.Columns);
+                    var column = new DataColumn(uniqueColumnName, dataType);
+                    column.ExtendedProperties[OriginalColumnName] = columnName;
+                    _DuplicateNameExceptionPreventUsed = true;
+                    DataTableWithoutData.Columns.Add(column);
+                    continue;
+                }
+                DataTableWithoutData.Columns.Add(new DataColumn(columnName, dataType));
             }
-            return new DataColumn(p_ColumnName, p_DataType);
         }
 
         private string UniqueColumnName(string columnName, DataColumnCollection columns)
         {
-            int i = 1;
+            var i = 1;
             while (columns.Contains(columnName + "_" + i))
                 i++;
             return columnName + "_" + i;
@@ -76,15 +78,11 @@ namespace SqlDataReaderStream
 #endif
                 //Move unprocessed data for next Read operation and Stream.Position is prepared for next WriteDataToStreamFromDataReader
                 if (readBytesFromStream < _StreamLengthWithValidData)
-                {
                     _StreamLengthWithValidData = MoveUnreadedDataToBeginOfStream();
-                }
                 else
-                {
                     Stream.Position = _StreamLengthWithValidData = 0;
-                }
             }
-            return (int)readBytesFromStream;
+            return (int) readBytesFromStream;
         }
 
         private int MoveUnreadedDataToBeginOfStream()
@@ -101,9 +99,8 @@ namespace SqlDataReaderStream
 
         private void WriteDataToStreamFromDataReader(int p_WriteMinBytes)
         {
-            bool dataReaderReaded = false;
+            var dataReaderReaded = false;
             if (_StreamLengthWithValidData < p_WriteMinBytes)
-            {
                 while (!_DataReaderEof)
                 {
                     _DataReaderEof = !_DataReader.Read();
@@ -117,10 +114,10 @@ namespace SqlDataReaderStream
 #if log
                         Debug.WriteLine($"_DataReader.GetValue({i}) = {val}");
 #endif
-                        if (!_TransferDuplicateColumnValues
+                        if (_DuplicateColumnNameProcess == DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithoutData
                             && _DuplicateNameExceptionPreventUsed
                             && DataTableWithoutData.Columns[i].ExtendedProperties[OriginalColumnName] != null)
-                            val = String.Empty;
+                            val = string.Empty;
 
                         _SqlValueSerializer.WriteObject(Stream, val, DataTableWithoutData.Columns[i].DataType, i == count - 1);
                     }
@@ -129,11 +126,8 @@ namespace SqlDataReaderStream
 #endif
                     if (Stream.Position >= p_WriteMinBytes) break;
                 }
-            }
             if (dataReaderReaded)
-            {
                 _StreamLengthWithValidData = Stream.Position;
-            }
         }
 
 #if log

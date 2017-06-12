@@ -31,12 +31,19 @@ namespace SqlDataReaderStream.Serializer
 
         public void WriteObject(Stream p_Stream, object p_Value, Type p_TableColumnDataType, bool p_LastValueOfRow)
         {
-            //DataContractSerializer dcs = new DataContractSerializer(p_Value.GetType());
-            //dcs.WriteObject(p_Stream, p_Value);
-            _StreamXml.Position = 0;
-            WriteOneObjectByXmlDictionaryWriter(_XmlDictionaryWriter, p_Value, p_TableColumnDataType);
-            CopyValueFromStreamXmlToStream(_StreamXml, p_Stream, ref _Buffer);
-            WriteSplitter(p_Stream, p_LastValueOfRow);
+            if (p_Value == null && p_TableColumnDataType == null && p_LastValueOfRow)
+            {
+                p_Stream.Write(_EndLineBuffer, 0, _EndLineBuffer.Length);
+            }
+            else
+            {
+                //DataContractSerializer dcs = new DataContractSerializer(p_Value.GetType());
+                //dcs.WriteObject(p_Stream, p_Value);
+                _StreamXml.Position = 0;
+                WriteOneObjectByXmlDictionaryWriter(_XmlDictionaryWriter, p_Value, p_TableColumnDataType);
+                CopyValueFromStreamXmlToStream(_StreamXml, p_Stream, ref _Buffer);
+                WriteSplitter(p_Stream, p_LastValueOfRow);
+            }
         }
 
         protected override object ConvertColumnData(TypeWithConverter p_ColumnType, string p_ColumnData)

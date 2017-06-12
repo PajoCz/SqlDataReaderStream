@@ -10,9 +10,17 @@ namespace SqlDataReaderStream.Serializer
 
         public void WriteObject(Stream p_Stream, object p_Value, Type p_TableColumnDataType, bool p_LastValueOfRow)
         {
-            if (p_TableColumnDataType == typeof(string))
-                BeforeWriteStreamCheckAndReplaceSpecialChars(ref p_Value);
-            var valString = p_LastValueOfRow ? p_Value + RowSplitterString : p_Value + ColumnSplitterString;
+            string valString;
+            if (p_Value == null && p_TableColumnDataType == null && p_LastValueOfRow)
+            {
+                valString = RowSplitterString;
+            }
+            else
+            {
+                if (p_TableColumnDataType == typeof(string))
+                    BeforeWriteStreamCheckAndReplaceSpecialChars(ref p_Value);
+                valString = p_LastValueOfRow ? p_Value + RowSplitterString : p_Value + ColumnSplitterString;
+            }
             byte[] bytes = Encoding.GetBytes(valString);
             p_Stream.Write(bytes, 0, bytes.Length);
         }

@@ -16,12 +16,13 @@ namespace SqlDataReaderStream
 
         private long _Position;
 
-        public SqlStream(SqlCommand p_SqlCommand, ISqlValueSerializer p_SqlValueSerializer, bool p_DuplicateNameExceptionPrevent = true, bool p_TransferDuplicateColumnValues = false)
+        public SqlStream(SqlCommand p_SqlCommand, ISqlValueSerializer p_SqlValueSerializer,
+            DuplicateColumnNameProcess p_DuplicateColumnNameProcess = DuplicateColumnNameProcess.DuplicateNameException)
         {
             _DataReader = p_SqlCommand.ExecuteReader(CommandBehavior.CloseConnection);
             try
             {
-                _StreamEngine = new SqlStreamEngine(_DataReader, new MemoryStream(), p_SqlValueSerializer, p_DuplicateNameExceptionPrevent, p_TransferDuplicateColumnValues);
+                _StreamEngine = new SqlStreamEngine(_DataReader, new MemoryStream(), p_SqlValueSerializer, p_DuplicateColumnNameProcess);
             }
             catch
             {

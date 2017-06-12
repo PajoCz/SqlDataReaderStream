@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DuplicateColumnNameProcess.cs" />
     <Compile Include="Serializer\ISqlValueSerializer.cs" />
     <Compile Include="SqlStreamEngine.cs" />
     <Compile Include="SqlStream.cs" />

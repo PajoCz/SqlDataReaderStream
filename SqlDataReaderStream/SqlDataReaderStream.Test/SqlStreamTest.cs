@@ -62,7 +62,7 @@ namespace SqlDataReaderStream.Test
         }
 
         [Test]
-        public void TwoColumnsSameName_CtorThrowsDuplicateNameException_SqlCommandWithTransaction_ConnectionMustBeClosed()
+        public void TwoColumnsSameName_Ctor_Default_DuplicateNameException_SqlCommandWithTransaction_ConnectionMustBeClosed()
         {
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
             {
@@ -74,7 +74,7 @@ namespace SqlDataReaderStream.Test
 
                     try
                     {
-                        using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), false))
+                        using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple()))
                         {
                         }
                     }
@@ -89,7 +89,7 @@ namespace SqlDataReaderStream.Test
         }
 
         [Test]
-        public void TwoColumnsSameName_CtorWithDuplicateNameExceptionPrevent_ReturnsOnlyFirstColumn_CheckStreamToDataTableRows_ReadStreamToDataTable_SecondColumnWithoutValue()
+        public void TwoColumnsSameName_Ctor_DuplicateColumnsWithNamePostfixWithoutData_CheckStreamToDataTableRows_ReadStreamToDataTable_SecondColumnWithoutValue()
         {
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
             {
@@ -97,7 +97,7 @@ namespace SqlDataReaderStream.Test
                 var sql = "SELECT 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
                 var cmd = new SqlCommand(sql, conn);
 
-                using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), true, false))
+                using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithoutData))
                 {
                     Assert.AreEqual(2, sqlDataReaderStream.DataTableWithoutData.Columns.Count);
                     Assert.AreEqual("ColumnA", sqlDataReaderStream.DataTableWithoutData.Columns[0].ColumnName);
@@ -113,7 +113,7 @@ namespace SqlDataReaderStream.Test
         }
 
         [Test]
-        public void TwoColumnsSameName_CtorWithDuplicateNameExceptionPrevent_ReturnsOnlyFirstColumn_CheckStreamToDataTableRows_ReadStreamToDataTable_SecondColumnWithValue()
+        public void TwoColumnsSameName_Ctor_DuplicateColumnsWithNamePostfixWithData_CheckStreamToDataTableRows_ReadStreamToDataTable_SecondColumnWithValue()
         {
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
             {
@@ -121,7 +121,7 @@ namespace SqlDataReaderStream.Test
                 var sql = "SELECT 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
                 var cmd = new SqlCommand(sql, conn);
 
-                using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), true, true))
+                using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithData))
                 {
                     Assert.AreEqual(2, sqlDataReaderStream.DataTableWithoutData.Columns.Count);
                     Assert.AreEqual("ColumnA", sqlDataReaderStream.DataTableWithoutData.Columns[0].ColumnName);
@@ -132,32 +132,7 @@ namespace SqlDataReaderStream.Test
                     new StreamToDataTableRows().ReadStreamToDataTable(sqlDataReaderStream, table, new SqlValueSerializerCsvSimple());
                     Assert.AreEqual("A", table.Rows[0][0].ToString());
                     Assert.AreEqual("B", table.Rows[0][1].ToString());
-
                 }
-            }
-        }
-
-        [Test]
-        public void TwoColumnsSameName_CtorThrowsDuplicateNameException_SqlCommandWithoutTransaction_ConnectionMustBeClosed()
-        {
-            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
-            {
-                conn.Open();
-                var sql = "SELECT *, 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
-                var cmd = new SqlCommand(sql, conn);
-
-                try
-                {
-                    using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), false))
-                    {
-                    }
-                }
-                catch (DuplicateNameException dne)
-                {
-                    Assert.AreEqual(ConnectionState.Closed, conn.State);
-                    return;
-                }
-                Assert.Fail("DuplicateNameException expected");
             }
         }
     }
