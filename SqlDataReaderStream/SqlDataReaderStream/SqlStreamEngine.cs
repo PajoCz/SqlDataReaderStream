@@ -16,28 +16,51 @@ namespace SqlDataReaderStream
 {
     internal class SqlStreamEngine
     {
+        public const string OriginalColumnName = "OriginalColumnName";
+
         private readonly SqlDataReader _DataReader;
         private readonly ISqlValueSerializer _SqlValueSerializer;
+        private readonly bool _TransferDuplicateColumnValues;
+        private bool _DuplicateNameExceptionPreventUsed;
         public readonly DataTable DataTableWithoutData;
         public readonly Stream Stream;
         private long _StreamLengthWithValidData;
         private bool _DataReaderEof;
 
-        public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer, bool p_DuplicateNameExceptionPrevent)
+        public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer, bool p_DuplicateNameExceptionPrevent, bool p_TransferDuplicateColumnValues)
         {
             _DataReader = p_DataReader;
             Stream = p_Stream;
             _SqlValueSerializer = p_SqlValueSerializer;
+            _TransferDuplicateColumnValues = p_TransferDuplicateColumnValues;
 
             var table = _DataReader.GetSchemaTable();
             DataTableWithoutData = new DataTable();
             foreach (DataRow row in table.Rows)
             {
-                string columnName = row["ColumnName"].ToString();
-                if (p_DuplicateNameExceptionPrevent && DataTableWithoutData.Columns.Contains(columnName))
-                    continue;
-                DataTableWithoutData.Columns.Add(new DataColumn(columnName, Type.GetType(row["DataType"].ToString())));
+                DataTableWithoutData.Columns.Add(CreateColumn(row["ColumnName"].ToString(), Type.GetType(row["DataType"].ToString()), p_DuplicateNameExceptionPrevent));
             }
+        }
+
+        private DataColumn CreateColumn(string p_ColumnName, Type p_DataType, bool p_DuplicateNameExceptionPrevent)
+        {
+            if (p_DuplicateNameExceptionPrevent && DataTableWithoutData.Columns.Contains(p_ColumnName))
+            {
+                var uniqueColumnName = UniqueColumnName(p_ColumnName, DataTableWithoutData.Columns);
+                DataColumn column = new DataColumn(uniqueColumnName, p_DataType);
+                column.ExtendedProperties[OriginalColumnName] = p_ColumnName;
+                _DuplicateNameExceptionPreventUsed = true;
+                return column;
+            }
+            return new DataColumn(p_ColumnName, p_DataType);
+        }
+
+        private string UniqueColumnName(string columnName, DataColumnCollection columns)
+        {
+            int i = 1;
+            while (columns.Contains(columnName + "_" + i))
+                i++;
+            return columnName + "_" + i;
         }
 
         public int Read(byte[] buffer, int offset, int count)
@@ -94,6 +117,11 @@ namespace SqlDataReaderStream
 #if log
                         Debug.WriteLine($"_DataReader.GetValue({i}) = {val}");
 #endif
+                        if (!_TransferDuplicateColumnValues
+                            && _DuplicateNameExceptionPreventUsed
+                            && DataTableWithoutData.Columns[i].ExtendedProperties[OriginalColumnName] != null)
+                            val = String.Empty;
+
                         _SqlValueSerializer.WriteObject(Stream, val, DataTableWithoutData.Columns[i].DataType, i == count - 1);
                     }
 #if log

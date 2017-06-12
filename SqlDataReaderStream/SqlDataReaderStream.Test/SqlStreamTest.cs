@@ -74,7 +74,7 @@ namespace SqlDataReaderStream.Test
 
                     try
                     {
-                        using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple()))
+                        using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), false))
                         {
                         }
                     }
@@ -89,7 +89,7 @@ namespace SqlDataReaderStream.Test
         }
 
         [Test]
-        public void TwoColumnsSameName_CtorWithDuplicateNameExceptionPrevent_ReturnsOnlyFirstColumn()
+        public void TwoColumnsSameName_CtorWithDuplicateNameExceptionPrevent_ReturnsOnlyFirstColumn_CheckStreamToDataTableRows_ReadStreamToDataTable_SecondColumnWithoutValue()
         {
             using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
             {
@@ -97,10 +97,42 @@ namespace SqlDataReaderStream.Test
                 var sql = "SELECT 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
                 var cmd = new SqlCommand(sql, conn);
 
-                using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), true))
+                using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), true, false))
                 {
-                    Assert.AreEqual(1, sqlDataReaderStream.DataTableWithoutData.Columns.Count);
+                    Assert.AreEqual(2, sqlDataReaderStream.DataTableWithoutData.Columns.Count);
                     Assert.AreEqual("ColumnA", sqlDataReaderStream.DataTableWithoutData.Columns[0].ColumnName);
+                    Assert.AreEqual("ColumnA_1", sqlDataReaderStream.DataTableWithoutData.Columns[1].ColumnName);
+
+                    //must read data to prepared table
+                    var table = sqlDataReaderStream.DataTableWithoutData;
+                    new StreamToDataTableRows().ReadStreamToDataTable(sqlDataReaderStream, table, new SqlValueSerializerCsvSimple());
+                    Assert.AreEqual("A", table.Rows[0][0].ToString());
+                    Assert.AreEqual(string.Empty, table.Rows[0][1].ToString());
+                }
+            }
+        }
+
+        [Test]
+        public void TwoColumnsSameName_CtorWithDuplicateNameExceptionPrevent_ReturnsOnlyFirstColumn_CheckStreamToDataTableRows_ReadStreamToDataTable_SecondColumnWithValue()
+        {
+            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            {
+                conn.Open();
+                var sql = "SELECT 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
+                var cmd = new SqlCommand(sql, conn);
+
+                using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), true, true))
+                {
+                    Assert.AreEqual(2, sqlDataReaderStream.DataTableWithoutData.Columns.Count);
+                    Assert.AreEqual("ColumnA", sqlDataReaderStream.DataTableWithoutData.Columns[0].ColumnName);
+                    Assert.AreEqual("ColumnA_1", sqlDataReaderStream.DataTableWithoutData.Columns[1].ColumnName);
+
+                    //must read data to prepared table
+                    var table = sqlDataReaderStream.DataTableWithoutData;
+                    new StreamToDataTableRows().ReadStreamToDataTable(sqlDataReaderStream, table, new SqlValueSerializerCsvSimple());
+                    Assert.AreEqual("A", table.Rows[0][0].ToString());
+                    Assert.AreEqual("B", table.Rows[0][1].ToString());
+
                 }
             }
         }
@@ -116,7 +148,7 @@ namespace SqlDataReaderStream.Test
 
                 try
                 {
-                    using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple()))
+                    using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), false))
                     {
                     }
                 }
