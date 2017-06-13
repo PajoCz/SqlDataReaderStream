@@ -11,7 +11,7 @@ namespace SqlDataReaderStream.Serializer
         public const char RowSplitter = '\n';
         protected readonly Encoding Encoding;
 
-        private readonly List<Tuple<char, string>> ReplaceSpecialChars = new List<Tuple<char, string>>
+        private readonly List<Tuple<char, string>> _ReplaceSpecialChars = new List<Tuple<char, string>>
         {
             new Tuple<char, string>('\t', "\\t"),
             new Tuple<char, string>('\n', "\\n"),
@@ -62,7 +62,7 @@ namespace SqlDataReaderStream.Serializer
         {
             if (p_ColumnType.Type == typeof(string))
             {
-                ReplaceSpecialChars.ForEach(m =>
+                _ReplaceSpecialChars.ForEach(m =>
                 {
                     if (p_ColumnData.Contains(m.Item2))
                         p_ColumnData = p_ColumnData.Replace(m.Item2, m.Item1.ToString());
@@ -76,7 +76,7 @@ namespace SqlDataReaderStream.Serializer
 
         protected void BeforeWriteStreamCheckAndReplaceSpecialChars(ref object p_Value)
         {
-            foreach (Tuple<char, string> m in ReplaceSpecialChars)
+            foreach (Tuple<char, string> m in _ReplaceSpecialChars)
                 if (p_Value.ToString().Contains(m.Item1))
                     p_Value = p_Value.ToString().Replace(m.Item1.ToString(), m.Item2);
         }

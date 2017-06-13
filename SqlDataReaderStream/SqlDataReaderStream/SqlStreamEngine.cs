@@ -40,7 +40,7 @@ namespace SqlDataReaderStream
             foreach (DataRow row in table.Rows)
             {
                 var columnName = row["ColumnName"].ToString();
-                var dataType = Type.GetType(row["DataType"].ToString());
+                var dataType = Type.GetType(row["DataType"].ToString()) ?? throw new Exception("SqlDataReader.GetSchemaTable must return column with name DataType");
 
                 if ((_DuplicateColumnNameProcess == DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithData
                      || _DuplicateColumnNameProcess == DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithoutData)

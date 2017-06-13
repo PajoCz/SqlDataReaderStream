@@ -8,16 +8,9 @@ namespace SqlDataReaderStream.Test
     [TestFixture]
     public class StreamToDataTableRowsTest
     {
-        private static SqlConnection CreateConnection()
-        {
-            var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString);
-            conn.Open();
-            return conn;
-        }
-
         private void TestSqlValueSerializerForReadingAndWriting(ISqlValueSerializer p_SqlValueSerializer, int p_BufferSize = 8192)
         {
-            var cmd = new SqlCommand("SELECT * FROM TestTable", CreateConnection());;
+            var cmd = new SqlCommand("SELECT * FROM TestTable", ConnectHelper.CreateConnection());
 
             //ACT with ASSERT
             using (var sqlDataReaderStream = new SqlStream(cmd, p_SqlValueSerializer))

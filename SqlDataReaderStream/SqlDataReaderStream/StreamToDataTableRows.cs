@@ -16,23 +16,23 @@ namespace SqlDataReaderStream
         //We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
         // The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
         // improvement in Copy performance.
-        private const int _DefaultCopyBufferSize = 81920;   //81920 = 80 * 1024 = 80kB
+        internal const int DefaultCopyBufferSize = 81920;   //81920 = 80 * 1024 = 80kB
 
-        private string LastRowMayBeOnlyFirstFragment;
+        private string _LastRowMayBeOnlyFirstFragment;
 
-        public void ReadStreamToDataTable(Stream p_Stream, DataTable p_DataTable, ISqlValueSerializer p_Serializer, int p_BufferSize = _DefaultCopyBufferSize)
+        public void ReadStreamToDataTable(Stream p_Stream, DataTable p_DataTable, ISqlValueSerializer p_Serializer, int p_BufferSize = DefaultCopyBufferSize)
         {
             byte[] buffer = new byte[p_BufferSize];
             var readed = int.MaxValue;
-            LastRowMayBeOnlyFirstFragment = string.Empty;
+            _LastRowMayBeOnlyFirstFragment = string.Empty;
             List<TypeWithConverter> columnTypes = new List<TypeWithConverter>(p_DataTable.Columns.Count);
             foreach (DataColumn column in p_DataTable.Columns)
                 columnTypes.Add(new TypeWithConverter(column.DataType, TypeDescriptor.GetConverter(column.DataType)));
             while (readed > 0)
             {
                 readed = p_Stream.Read(buffer, 0, buffer.Length);
-                var readedString = LastRowMayBeOnlyFirstFragment + Encoding.UTF8.GetString(buffer, 0, readed);
-                IEnumerable<object[]> readedSplitted = p_Serializer.ReadValues(readedString, columnTypes, out LastRowMayBeOnlyFirstFragment);
+                var readedString = _LastRowMayBeOnlyFirstFragment + Encoding.UTF8.GetString(buffer, 0, readed);
+                IEnumerable<object[]> readedSplitted = p_Serializer.ReadValues(readedString, columnTypes, out _LastRowMayBeOnlyFirstFragment);
                 foreach (object[] rowData in readedSplitted)
                     p_DataTable.Rows.Add(rowData);
             }

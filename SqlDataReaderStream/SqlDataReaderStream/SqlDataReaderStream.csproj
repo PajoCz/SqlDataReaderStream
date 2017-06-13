@@ -49,6 +49,8 @@
     <Compile Include="Serializer\SqlValueSerializerCsvSimple.cs" />
     <Compile Include="Serializer\SqlValueSerializerCsvWithXmlDictionaryWriter.cs" />
     <Compile Include="StreamToDataTableRows.cs" />
+    <Compile Include="StreamToEnumaratorDataRows.cs" />
+    <Compile Include="StreamToEnumerableDataRows.cs" />
     <Compile Include="TypeWithConverter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
