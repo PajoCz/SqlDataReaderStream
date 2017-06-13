@@ -1,5 +1,4 @@
-﻿using System.Configuration;
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using NUnit.Framework;
 using SqlDataReaderStream.Serializer;
 
@@ -31,15 +30,15 @@ is ok", table.Rows[2]["TestString"], "Failed test string with special chars (sam
         }
 
         [Test]
-        public void ReadStreamToDataTable_SqlValueSerializerCsvSimple_SmallBuffer()
-        {
-            TestSqlValueSerializerForReadingAndWriting(new SqlValueSerializerCsvSimple(), 1);
-        }
-
-        [Test]
         public void ReadStreamToDataTable_SqlValueSerializerCsvSimple_BufferSizeSameAsOneRowSerialized()
         {
             TestSqlValueSerializerForReadingAndWriting(new SqlValueSerializerCsvSimple(), 7);
+        }
+
+        [Test]
+        public void ReadStreamToDataTable_SqlValueSerializerCsvSimple_SmallBuffer()
+        {
+            TestSqlValueSerializerForReadingAndWriting(new SqlValueSerializerCsvSimple(), 1);
         }
 
         [Test]
