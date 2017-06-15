@@ -61,7 +61,7 @@ INSERT INTO @p2 VALUES('IdOceneni','Sestupne')
 INSERT INTO @p2 VALUES('Mena','Vzestupne')
 EXECUTE Oept.p_rd_OceneniAkceptace @SelectList=@p0,@FilterList=@p1,@OrderBy=@p2,@SelectTop=10000,@Aggregation=0,@UserName='rmacejik'
 ";
-            var cmd = new SqlCommand(sql, CreateConnection());;
+            var cmd = new SqlCommand(sql, CreateConnection());
 
             //ACT with ASSERT
             using (var sqlDataReaderStream = new SqlStream(cmd, p_SqlValueSerializer))

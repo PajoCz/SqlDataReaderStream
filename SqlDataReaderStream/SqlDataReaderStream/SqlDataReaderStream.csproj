@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DuplicateColumnNameProcess.cs" />
+    <Compile Include="ISqlStreamHeader.cs" />
     <Compile Include="Serializer\ISqlValueSerializer.cs" />
     <Compile Include="SqlStreamEngine.cs" />
     <Compile Include="SqlStream.cs" />
@@ -48,6 +49,7 @@
     <Compile Include="Serializer\SqlValueSerializerCsvBase.cs" />
     <Compile Include="Serializer\SqlValueSerializerCsvSimple.cs" />
     <Compile Include="Serializer\SqlValueSerializerCsvWithXmlDictionaryWriter.cs" />
+    <Compile Include="SqlStreamHeaderDataTableSchemaXml.cs" />
     <Compile Include="StreamToDataTableRows.cs" />
     <Compile Include="StreamToEnumaratorDataRows.cs" />
     <Compile Include="StreamToEnumerableDataRows.cs" />

@@ -1,10 +1,12 @@
 //#define log
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using SqlDataReaderStream.Serializer;
+using System.Linq;
 #if log
 using System.Diagnostics;
 #endif
@@ -14,7 +16,7 @@ using System.Text;
 
 namespace SqlDataReaderStream
 {
-    internal class SqlStreamEngine
+    public class SqlStreamEngine
     {
         public const string OriginalColumnName = "OriginalColumnName";
 
@@ -23,15 +25,29 @@ namespace SqlDataReaderStream
         private readonly DuplicateColumnNameProcess _DuplicateColumnNameProcess;
         private readonly bool _DuplicateNameExceptionPreventUsed;
         public readonly DataTable DataTableWithoutData;
-        public readonly Stream Stream;
+        private readonly Stream _BufferStream;
         private long _StreamLengthWithValidData;
         private bool _DataReaderEof;
 
+        public static void CopyStreamWithLengthLimit(Stream p_SourceStream, Stream p_TargetStream, int p_SourceReadBytes, int p_BufferSize)
+        {
+            byte[] buffer = new byte[p_BufferSize];
+            var started = (int)p_SourceStream.Position;
+            int readMax = Math.Min(p_SourceReadBytes, p_BufferSize);
+            int readed;
+            while ((readed = p_SourceStream.Read(buffer, 0, readMax)) > 0)
+            {
+                p_TargetStream.Write(buffer, 0, readed);
+                readMax = Math.Max(0, Math.Min(p_SourceReadBytes - (int)p_SourceStream.Position + started, p_BufferSize));
+            }
+        }
+
+
         public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer,
-            DuplicateColumnNameProcess p_DuplicateColumnNameProcess)
+            DuplicateColumnNameProcess p_DuplicateColumnNameProcess, IEnumerable<ISqlStreamHeader> p_SqlStreamHeader)
         {
             _DataReader = p_DataReader;
-            Stream = p_Stream;
+            _BufferStream = p_Stream;
             _SqlValueSerializer = p_SqlValueSerializer;
             _DuplicateColumnNameProcess = p_DuplicateColumnNameProcess;
 
@@ -55,6 +71,16 @@ namespace SqlDataReaderStream
                 }
                 DataTableWithoutData.Columns.Add(new DataColumn(columnName, dataType));
             }
+
+            if (p_SqlStreamHeader != null)
+            {
+                foreach (var sh in p_SqlStreamHeader)
+                {
+                    sh.WriteToStream(_BufferStream, DataTableWithoutData);
+                }
+            }
+
+            _StreamLengthWithValidData = _BufferStream.Position;
         }
 
         private string UniqueColumnName(string columnName, DataColumnCollection columns)
@@ -71,8 +97,8 @@ namespace SqlDataReaderStream
             var readBytesFromStream = _StreamLengthWithValidData <= count ? _StreamLengthWithValidData : count;
             if (readBytesFromStream > 0)
             {
-                Stream.Position = 0;
-                Stream.Read(buffer, offset, (int) readBytesFromStream);
+                _BufferStream.Position = 0;
+                _BufferStream.Read(buffer, offset, (int) readBytesFromStream);
 #if log
                 LogBytes($"Stream readed {readBytesFromStream}B from buffer:", buffer, (int)readBytesFromStream);
 #endif
@@ -80,17 +106,17 @@ namespace SqlDataReaderStream
                 if (readBytesFromStream < _StreamLengthWithValidData)
                     _StreamLengthWithValidData = MoveUnreadedDataToBeginOfStream();
                 else
-                    Stream.Position = _StreamLengthWithValidData = 0;
+                    _BufferStream.Position = _StreamLengthWithValidData = 0;
             }
             return (int) readBytesFromStream;
         }
 
         private int MoveUnreadedDataToBeginOfStream()
         {
-            byte[] buffer = new byte[(int) (_StreamLengthWithValidData - Stream.Position)];
-            Stream.Read(buffer, 0, buffer.Length);
-            Stream.Position = 0;
-            Stream.Write(buffer, 0, buffer.Length);
+            byte[] buffer = new byte[(int) (_StreamLengthWithValidData - _BufferStream.Position)];
+            _BufferStream.Read(buffer, 0, buffer.Length);
+            _BufferStream.Position = 0;
+            _BufferStream.Write(buffer, 0, buffer.Length);
 #if log
             LogStreamFromBeginToActualPosition("Moved unreaded data to begin of stream:", Stream);
 #endif
@@ -119,15 +145,15 @@ namespace SqlDataReaderStream
                             && DataTableWithoutData.Columns[i].ExtendedProperties[OriginalColumnName] != null)
                             val = string.Empty;
 
-                        _SqlValueSerializer.WriteObject(Stream, val, DataTableWithoutData.Columns[i].DataType, i == count - 1);
+                        _SqlValueSerializer.WriteObject(_BufferStream, val, DataTableWithoutData.Columns[i].DataType, i == count - 1);
                     }
 #if log
                     LogStreamFromBeginToActualPosition("DataReader.Read written another DataRow to Stream. Stream data:", Stream);
 #endif
-                    if (Stream.Position >= p_WriteMinBytes) break;
+                    if (_BufferStream.Position >= p_WriteMinBytes) break;
                 }
             if (dataReaderReaded)
-                _StreamLengthWithValidData = Stream.Position;
+                _StreamLengthWithValidData = _BufferStream.Position;
         }
 
 #if log
