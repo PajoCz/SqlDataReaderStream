@@ -6,7 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using SqlDataReaderStream.Serializer;
-using System.Linq;
+
 #if log
 using System.Diagnostics;
 #endif
@@ -32,19 +32,19 @@ namespace SqlDataReaderStream
         public static void CopyStreamWithLengthLimit(Stream p_SourceStream, Stream p_TargetStream, int p_SourceReadBytes, int p_BufferSize)
         {
             byte[] buffer = new byte[p_BufferSize];
-            var started = (int)p_SourceStream.Position;
-            int readMax = Math.Min(p_SourceReadBytes, p_BufferSize);
+            var started = (int) p_SourceStream.Position;
+            var readMax = Math.Min(p_SourceReadBytes, p_BufferSize);
             int readed;
             while ((readed = p_SourceStream.Read(buffer, 0, readMax)) > 0)
             {
                 p_TargetStream.Write(buffer, 0, readed);
-                readMax = Math.Max(0, Math.Min(p_SourceReadBytes - (int)p_SourceStream.Position + started, p_BufferSize));
+                readMax = Math.Max(0, Math.Min(p_SourceReadBytes - (int) p_SourceStream.Position + started, p_BufferSize));
             }
         }
 
 
         public SqlStreamEngine(SqlDataReader p_DataReader, Stream p_Stream, ISqlValueSerializer p_SqlValueSerializer,
-            DuplicateColumnNameProcess p_DuplicateColumnNameProcess, IEnumerable<ISqlStreamHeader> p_SqlStreamHeader)
+            DuplicateColumnNameProcess p_DuplicateColumnNameProcess, IEnumerable<ISqlStreamHeader> p_SqlStreamHeader, Action<DataTable> p_DataTableSchemaCreated = null)
         {
             _DataReader = p_DataReader;
             _BufferStream = p_Stream;
@@ -72,13 +72,11 @@ namespace SqlDataReaderStream
                 DataTableWithoutData.Columns.Add(new DataColumn(columnName, dataType));
             }
 
+            p_DataTableSchemaCreated?.Invoke(DataTableWithoutData);
+
             if (p_SqlStreamHeader != null)
-            {
                 foreach (var sh in p_SqlStreamHeader)
-                {
                     sh.WriteToStream(_BufferStream, DataTableWithoutData);
-                }
-            }
 
             _StreamLengthWithValidData = _BufferStream.Position;
         }
