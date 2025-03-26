@@ -20,19 +20,19 @@ namespace SqlDataReaderStream.Test
             using (var sqlDataReaderStream = new SqlStream(cmd, serializer))
             {
                 var table = sqlDataReaderStream.DataTableWithoutData;
-                Assert.AreEqual(0, table.Rows.Count);
+                Assert.That(table.Rows.Count, Is.EqualTo(0));
                 List<DataRow> rows = new List<DataRow>();
                 var oldPosition = sqlDataReaderStream.Position;
                 foreach (var row in new StreamToEnumerableDataRows(sqlDataReaderStream, table, serializer, bufferSize))
                 {
-                    Assert.Greater(sqlDataReaderStream.Position, oldPosition);
+                    Assert.That(sqlDataReaderStream.Position, Is.GreaterThan(oldPosition));
                     oldPosition = sqlDataReaderStream.Position;
                     rows.Add(row);
-                    Assert.AreEqual(ConnectionState.Open, cmd.Connection.State);
+                    Assert.That(cmd.Connection.State, Is.EqualTo(ConnectionState.Open));
                 }
                 //after dispose foreach is disposed readed stream too and it close connection
-                Assert.AreEqual(ConnectionState.Closed, cmd.Connection.State);
-                Assert.AreEqual(3, rows.Count);
+                Assert.That(cmd.Connection.State, Is.EqualTo(ConnectionState.Closed));
+                Assert.That(rows.Count, Is.EqualTo(3));
             }
         }
     }

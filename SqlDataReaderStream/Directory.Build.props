@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+	  <NetFrameworkVersion>net472</NetFrameworkVersion>
+	  <NetCoreVersion>net8.0</NetCoreVersion>
+	  <TargetFrameworks>$(NetFrameworkVersion);$(NetCoreVersion)</TargetFrameworks>
+  </PropertyGroup>
+</Project>

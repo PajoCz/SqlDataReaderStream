@@ -13,12 +13,11 @@ namespace SqlDataReaderStream.Test
         public void AfterDisposeSqlStream_ConnectIsDisposed()
         {
             //ARRANGE
-            var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString);
-            conn.Open();
+            var conn = ConnectHelper.CreateConnection();
             var sql = "SELECT * FROM TestTable";
             var cmd = new SqlCommand(sql, conn);
 
-            Assert.AreEqual(ConnectionState.Open, conn.State);
+            Assert.That(conn.State, Is.EqualTo(ConnectionState.Open));
 
             //ACT
             using (new SqlStream(cmd, new SqlValueSerializerCsvSimple()))
@@ -26,15 +25,14 @@ namespace SqlDataReaderStream.Test
             }
 
             //ASSERT
-            Assert.AreEqual(ConnectionState.Closed, conn.State);
+            Assert.That(conn.State, Is.EqualTo(ConnectionState.Closed));
         }
 
         [Test]
         public void SqlValueSerializerCsvSimple()
         {
-            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            using (var conn = ConnectHelper.CreateConnection())
             {
-                conn.Open();
                 var sql = "SELECT * FROM TestTable";
                 var cmd = new SqlCommand(sql, conn);
 
@@ -48,9 +46,8 @@ namespace SqlDataReaderStream.Test
         [Test]
         public void SqlValueSerializerCsvWithXmlDictionaryWriter()
         {
-            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            using (var conn = ConnectHelper.CreateConnection())
             {
-                conn.Open();
                 var sql = "SELECT * FROM TestTable";
                 var cmd = new SqlCommand(sql, conn);
 
@@ -64,9 +61,8 @@ namespace SqlDataReaderStream.Test
         [Test]
         public void TwoColumnsSameName_Ctor_Default_DuplicateNameException_SqlCommandWithTransaction_ConnectionMustBeClosed()
         {
-            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            using (var conn = ConnectHelper.CreateConnection())
             {
-                conn.Open();
                 using (var tran = conn.BeginTransaction(IsolationLevel.ReadUncommitted))
                 {
                     var sql = "SELECT *, 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
@@ -80,7 +76,7 @@ namespace SqlDataReaderStream.Test
                     }
                     catch (DuplicateNameException)
                     {
-                        Assert.AreEqual(ConnectionState.Closed, conn.State);
+                        Assert.That(conn.State, Is.EqualTo(ConnectionState.Closed));
                         return;
                     }
                     Assert.Fail("DuplicateNameException expected");
@@ -93,7 +89,7 @@ namespace SqlDataReaderStream.Test
         {
             var duplicateColumnNameProcess = DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithoutData;
             DataTable table = SelectDuplicateColumn(duplicateColumnNameProcess);
-            Assert.AreEqual(string.Empty, table.Rows[0][1].ToString());
+            Assert.That(table.Rows[0][1].ToString(), Is.EqualTo(string.Empty));
         }
 
         [Test]
@@ -101,27 +97,26 @@ namespace SqlDataReaderStream.Test
         {
             var duplicateColumnNameProcess = DuplicateColumnNameProcess.DuplicateColumnsWithNamePostfixWithData;
             DataTable table = SelectDuplicateColumn(duplicateColumnNameProcess);
-            Assert.AreEqual("B", table.Rows[0][1].ToString());
+            Assert.That(table.Rows[0][1].ToString(), Is.EqualTo("B"));
         }
 
         private DataTable SelectDuplicateColumn(DuplicateColumnNameProcess p_DuplicateColumnNameProcess)
         {
-            using (var conn = new SqlConnection(ConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            using (var conn = ConnectHelper.CreateConnection())
             {
-                conn.Open();
                 var sql = "SELECT 'A' as ColumnA, 'B' as ColumnA FROM TestTable";
                 var cmd = new SqlCommand(sql, conn);
 
                 using (var sqlDataReaderStream = new SqlStream(cmd, new SqlValueSerializerCsvSimple(), p_DuplicateColumnNameProcess))
                 {
-                    Assert.AreEqual(2, sqlDataReaderStream.DataTableWithoutData.Columns.Count);
-                    Assert.AreEqual("ColumnA", sqlDataReaderStream.DataTableWithoutData.Columns[0].ColumnName);
-                    Assert.AreEqual("ColumnA_1", sqlDataReaderStream.DataTableWithoutData.Columns[1].ColumnName);
+                    Assert.That(sqlDataReaderStream.DataTableWithoutData.Columns.Count, Is.EqualTo(2));
+                    Assert.That(sqlDataReaderStream.DataTableWithoutData.Columns[0].ColumnName, Is.EqualTo("ColumnA"));
+                    Assert.That(sqlDataReaderStream.DataTableWithoutData.Columns[1].ColumnName, Is.EqualTo("ColumnA_1"));
 
                     //must read data to prepared table
                     DataTable table = sqlDataReaderStream.DataTableWithoutData;
                     new StreamToDataTableRows().ReadStreamToDataTable(sqlDataReaderStream, table, new SqlValueSerializerCsvSimple());
-                    Assert.AreEqual("A", table.Rows[0][0].ToString());
+                    Assert.That(table.Rows[0][0].ToString(), Is.EqualTo("A"));
                     return table;
                 }
             }
