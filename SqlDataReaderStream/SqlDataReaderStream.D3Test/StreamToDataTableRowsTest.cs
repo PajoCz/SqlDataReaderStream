@@ -66,10 +66,11 @@ EXECUTE Oept.p_rd_OceneniAkceptace @SelectList=@p0,@FilterList=@p1,@OrderBy=@p2,
             //ACT with ASSERT
             using (var sqlDataReaderStream = new SqlStream(cmd, p_SqlValueSerializer))
             {
+                
                 var table = sqlDataReaderStream.DataTableWithoutData;
-                Assert.AreEqual(0, table.Rows.Count);
+                Assert.That(table.Rows.Count, Is.EqualTo(0));
                 new StreamToDataTableRows().ReadStreamToDataTable(sqlDataReaderStream, table, p_SqlValueSerializer, p_BufferSize);
-                Assert.AreEqual(6194, table.Rows.Count);
+                Assert.That(table.Rows.Count, Is.EqualTo(6194));
             }
         }
 

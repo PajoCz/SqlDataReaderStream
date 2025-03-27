@@ -15,11 +15,11 @@ namespace SqlDataReaderStream.Test
             using (var sqlDataReaderStream = new SqlStream(cmd, p_SqlValueSerializer))
             {
                 var table = sqlDataReaderStream.DataTableWithoutData;
-                Assert.AreEqual(0, table.Rows.Count);
+                Assert.That(table.Rows.Count, Is.EqualTo(0));
                 new StreamToDataTableRows().ReadStreamToDataTable(sqlDataReaderStream, table, p_SqlValueSerializer, p_BufferSize);
-                Assert.AreEqual(3, table.Rows.Count);
-                Assert.AreEqual(@"Test Tab	and NewLine
-is ok", table.Rows[2]["TestString"], "Failed test string with special chars (same as RowSplitter and ColumnSplitter in Csv format)");
+                Assert.That(table.Rows.Count, Is.EqualTo(3));
+                Assert.That(table.Rows[2]["TestString"], Is.EqualTo(@"Test Tab	and NewLine
+is ok"), "Failed test string with special chars (same as RowSplitter and ColumnSplitter in Csv format)");
             }
         }
 
