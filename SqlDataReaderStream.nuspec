@@ -2,19 +2,21 @@
 <package >
   <metadata>
     <id>SqlDataReaderStream</id>
-    <version>1.9.0</version>
+    <version>1.9.1</version>
     <authors>pbalas</authors>
     <owners>pbalas</owners>
     <licenseUrl>https://github.com/PajoCz/RuleEvaluator/licence.txt</licenseUrl>
     <projectUrl>https://github.com/PajoCz/SqlDataReaderStream</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Stream reading over SqlDataReader</description>
-    <copyright>Copyright 2017 pbalas</copyright>
+    <copyright>Copyright 2025 pbalas</copyright>
     <tags>Sql DataReader Stream</tags>
   </metadata>
 
   <files>
-    <file src="SqlDataReaderStream\SqlDataReaderStream\bin\Debug\SqlDataReaderStream.dll" target="lib\net40"/>
-    <file src="SqlDataReaderStream\SqlDataReaderStream\bin\Debug\SqlDataReaderStream.pdb" target="lib\net40"/>
+    <file src="SqlDataReaderStream\SqlDataReaderStream\bin\Debug\net472\SqlDataReaderStream.dll" target="lib\net472"/>
+    <file src="SqlDataReaderStream\SqlDataReaderStream\bin\Debug\net472\SqlDataReaderStream.pdb" target="lib\net472"/>
+    <file src="SqlDataReaderStream\SqlDataReaderStream\bin\Debug\net8.0\SqlDataReaderStream.dll" target="lib\net8.0"/>
+    <file src="SqlDataReaderStream\SqlDataReaderStream\bin\Debug\net8.0\SqlDataReaderStream.pdb" target="lib\net8.0"/>
   </files>
 </package>
