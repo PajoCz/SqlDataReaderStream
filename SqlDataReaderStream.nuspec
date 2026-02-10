@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>SqlDataReaderStream</id>
-    <version>1.9.1</version>
+    <version>1.10.1</version>
     <authors>pbalas</authors>
     <owners>pbalas</owners>
     <licenseUrl>https://github.com/PajoCz/RuleEvaluator/licence.txt</licenseUrl>

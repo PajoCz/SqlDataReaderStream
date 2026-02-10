@@ -4,7 +4,7 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<IsPackable>true</IsPackable>
 	</PropertyGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == '$(NetCoreVersion)'">
-		<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
 	</ItemGroup>
 </Project>
