@@ -1,0 +1,90 @@
+name: CI - Windows build
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET (for dotnet restore/build)
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Show .NET info
+        run: dotnet --info
+
+      - name: Ensure MSBuild is available
+        uses: microsoft/setup-msbuild@v1
+
+      - name: List repo files (debug)
+        # optional: helps see přesnou strukturu v prvním běhu
+        run: dir /s
+
+      - name: Restore NuGet packages (classic projects)
+        shell: pwsh
+        run: |
+          $sln1 = "./SqlDataReaderStream/SqlDataReaderStream.sln"
+          $sln2 = "./SqlDataReaderStream.sln"
+          if (Test-Path -Path $sln1) {
+            Write-Host "Running nuget restore on solution at $sln1"
+            nuget restore $sln1
+          } elseif (Test-Path -Path $sln2) {
+            Write-Host "Running nuget restore on solution at $sln2"
+            nuget restore $sln2
+          } else {
+            Write-Host "Solution not found at expected paths, skipping nuget restore"
+          }
+
+      - name: Dotnet restore (SDK-style / PackageReference)
+        shell: pwsh
+        run: |
+          $sln1 = "./SqlDataReaderStream/SqlDataReaderStream.sln"
+          $sln2 = "./SqlDataReaderStream.sln"
+          if (Test-Path -Path $sln1) {
+            Write-Host "Running dotnet restore on solution at $sln1"
+            dotnet restore $sln1
+          } elseif (Test-Path -Path $sln2) {
+            Write-Host "Running dotnet restore on solution at $sln2"
+            dotnet restore $sln2
+          } else {
+            Write-Host "Solution not found at expected paths, skipping dotnet restore"
+          }
+
+      - name: Build with MSBuild
+        shell: pwsh
+        run: |
+          $sln1 = "./SqlDataReaderStream/SqlDataReaderStream.sln"
+          $sln2 = "./SqlDataReaderStream.sln"
+          if (Test-Path -Path $sln1) {
+            Write-Host "Building solution at $sln1"
+            msbuild $sln1 /p:Configuration=Release /m
+          } elseif (Test-Path -Path $sln2) {
+            Write-Host "Building solution at $sln2"
+            msbuild $sln2 /p:Configuration=Release /m
+          } else {
+            Write-Host "Solution not found at expected paths, failing the build"
+            exit 1
+          }
+
+      - name: Run tests (optional)
+        # Pokud máš SDK-style test projects, odkomentuj a uprav scripts níže:
+        # shell: pwsh
+        # run: |
+        #   $sln1 = "./SqlDataReaderStream/SqlDataReaderStream.sln"
+        #   $sln2 = "./SqlDataReaderStream.sln"
+        #   if (Test-Path -Path $sln1) {
+        #     dotnet test $sln1 --no-build --verbosity normal
+        #   } elseif (Test-Path -Path $sln2) {
+        #     dotnet test $sln2 --no-build --verbosity normal
+        #   } else {
+        #     Write-Host "Solution not found; skipping tests"
+        #   }
+        run: echo "Add 'dotnet test' here if you have SDK-style test projects."

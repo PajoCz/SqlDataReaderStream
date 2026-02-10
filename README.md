@@ -1,5 +1,7 @@
 # SqlDataReaderStream
 
+[![CI - Windows build](https://github.com/PajoCz/SqlDataReaderStream/actions/workflows/ci.yml/badge.svg)](https://github.com/PajoCz/SqlDataReaderStream/actions/workflows/ci.yml)
+
 ## Quick links
 
 |Item                  |Link                                                                                  |
